@@ -1,0 +1,25 @@
+{
+  "name": "dapp-panel-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/James-Sangalli/dApp-panel-api"
+  },
+  "keywords": [],
+  "author": "James Sangalli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/James-Sangalli/dApp-panel-api/issues"
+  },
+  "homepage": "https://github.com/James-Sangalli/dApp-panel-api/#readme",
+  "dependencies": {
+    "ethers": "^5.0.14",
+    "express": "^4.17.1",
+    "superagent": "^6.1.0"
+  }
+}
