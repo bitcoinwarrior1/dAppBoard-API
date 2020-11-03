@@ -1,5 +1,22 @@
 module.exports = {
 
+    // top 5 addresses this user sends ETH to
+    getMostEthTransfers: (txs) => {
+
+    },
+    //contract address of the contract the user uses most
+    getMostUsedContract: (txs) => {
+
+    },
+    // top 5 function signatures of the most popular function call on most used contracts
+    getMostCalledFunctions: (txs) => {
+
+    },
+    // finds pattern in transaction history e.g. claim NEST bonus and predicts when you will next do it
+    getPredictedTransactions: (txs) => {
+
+    },
+
     rankByFunctionSignature: (arr) => {
         return arr.sort((a,b) =>
             arr.filter(v => v.functionSignature===a.functionSignature).length

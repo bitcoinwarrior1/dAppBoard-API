@@ -1,7 +1,14 @@
 const Ethers = require('ethers');
 let provider = Ethers.providers.getDefaultProvider("mainnet");
 const request = require("superagent");
-const { rankByFunctionSignature, getEtherscanNormalTransactionsQuery, getEtherscanInternalTransactionsQuery } = require("./helpers/helpers");
+const { rankByFunctionSignature,
+    getEtherscanNormalTransactionsQuery,
+    getEtherscanInternalTransactionsQuery,
+    getMostEthTransfers,
+    getMostUsedContract,
+    getMostCalledFunctions,
+    getPredictedTransactions
+} = require("./helpers/helpers");
 
 /*
 * @param network: the ethereum blockchain network
@@ -13,7 +20,22 @@ async function getUserInteractionsRanked(network, userAddress) {
     let results = {};
     results.normalTransactionsRanked = await getNormalTransactionsRanked(userAddress);
     results.internalTransactionsRanked = await getInternalTransactionsRanked(userAddress);
+    results.classifiedTransactions = classifyTransactionsIntoCategories(results);
     return results;
+}
+
+/*
+*  @param resultsObj, an object with two keys: normalTransactionsRanked & internalTransactionsRanked
+*  @returns classifiedTransactions an object
+*  */
+function classifyTransactionsIntoCategories(resultsObj) {
+    let classifiedTransactions = {};
+    const txs = [resultsObj.normalTransactionsRanked, resultsObj.internalTransactionsRanked];
+    classifiedTransactions.mostEthTransfersTo = getMostEthTransfers(txs);
+    classifiedTransactions.mostUsedContract = getMostUsedContract(txs);
+    classifiedTransactions.mostCalledFunctions = getMostCalledFunctions(txs);
+    classifiedTransactions.predictedTransactions = getPredictedTransactions(txs);
+    return classifiedTransactions;
 }
 
 /*
