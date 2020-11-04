@@ -9,12 +9,15 @@ describe('getUserInteractionsRanked works as expected', () => {
         this.txs = await getUserInteractionsRanked("mainnet", dummyAccount);
     });
 
-    it("can get normalTransactions & internalTransactions", async () => {
+    it("can get normalTransactions, classifiedTransactions & internalTransactions", async () => {
         expect(this.txs.normalTransactionsRanked).to.not.equal(undefined, "successfully retrieved normal transactions");
         expect(this.txs.internalTransactionsRanked).to.not.equal(undefined, "successfully retrieved internal transactions");
+        expect(this.txs.classifiedTransactions).to.not.equal(undefined, "successfully retrieved classified transactions");
+        console.log(this.txs.classifiedTransactions)
     });
 
     it("can rank transactions by popularity", async () => {
         expect(this.txs.normalTransactionsRanked[0].functionSignature).to.equal(mostPopularFunctionHash);
     });
+
 })

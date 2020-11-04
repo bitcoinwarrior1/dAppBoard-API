@@ -5,7 +5,7 @@ const { rankByFunctionSignature,
     getEtherscanNormalTransactionsQuery,
     getEtherscanInternalTransactionsQuery,
     getMostEthTransfers,
-    getMostUsedContract,
+    getMostUsedContracts,
     getMostCalledFunctions,
     getPredictedTransactions
 } = require("./helpers/helpers");
@@ -20,7 +20,7 @@ async function getUserInteractionsRanked(network, userAddress) {
     let results = {};
     results.normalTransactionsRanked = await getNormalTransactionsRanked(userAddress);
     results.internalTransactionsRanked = await getInternalTransactionsRanked(userAddress);
-    results.classifiedTransactions = classifyTransactionsIntoCategories(results);
+    results.classifiedTransactions = await classifyTransactionsIntoCategories(results);
     return results;
 }
 
@@ -28,11 +28,11 @@ async function getUserInteractionsRanked(network, userAddress) {
 *  @param resultsObj, an object with two keys: normalTransactionsRanked & internalTransactionsRanked
 *  @returns classifiedTransactions an object
 *  */
-function classifyTransactionsIntoCategories(resultsObj) {
+async function classifyTransactionsIntoCategories(resultsObj) {
     let classifiedTransactions = {};
-    const txs = [resultsObj.normalTransactionsRanked, resultsObj.internalTransactionsRanked];
+    const txs = resultsObj.normalTransactionsRanked.concat(resultsObj.internalTransactionsRanked);
     classifiedTransactions.mostEthTransfersTo = getMostEthTransfers(txs);
-    classifiedTransactions.mostUsedContract = getMostUsedContract(txs);
+    classifiedTransactions.mostUsedContract = await getMostUsedContracts(provider, txs);
     classifiedTransactions.mostCalledFunctions = getMostCalledFunctions(txs);
     classifiedTransactions.predictedTransactions = getPredictedTransactions(txs);
     return classifiedTransactions;
