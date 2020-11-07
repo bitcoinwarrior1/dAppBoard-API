@@ -18,7 +18,10 @@ const projectSecret = process.env.projectSecret;
 * @returns an object containing transaction data about the user
 * */
 async function getUserInteractionsRanked(network, userAddress) {
-    provider = Ethers.providers.getDefaultProvider(network, { infura: { projectId: projectId, projectSecret: projectSecret } });
+    provider = new Ethers.providers.InfuraProvider("homestead", {
+        projectId: projectId,
+        projectSecret: projectSecret
+    });
     let results = {};
     results.normalTransactions = await getNormalTransactions(userAddress);
     results.internalTransactions = await getInternalTransactions(userAddress);
