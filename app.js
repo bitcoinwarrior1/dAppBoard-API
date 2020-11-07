@@ -8,7 +8,7 @@ app.get("/ethereum-interactions/:network/:address", (req, res, next) => {
     let userAddress = req.params.address;
     let network = req.params.network;
     getUserInteractionsRanked(network, userAddress).then((result) => {
-        res.send(result);
+        res.send(result.categories);
     }).catch((err) => {
         res.send(err);
     })

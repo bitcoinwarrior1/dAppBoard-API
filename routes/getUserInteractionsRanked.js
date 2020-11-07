@@ -1,14 +1,16 @@
 const Ethers = require('ethers');
-let provider = Ethers.providers.getDefaultProvider("mainnet");
+let provider = null;
 const request = require("superagent");
-const { rankByFunctionSignature,
-    getEtherscanNormalTransactionsQuery,
+const { getEtherscanNormalTransactionsQuery,
     getEtherscanInternalTransactionsQuery,
     getMostEthTransfers,
     getMostUsedContracts,
     getMostCalledFunctions,
-    getPredictedTransactions
+    getPredictedTransactions,
+    getContractsYouCreated
 } = require("./helpers/helpers");
+const projectId = process.env.projectId;
+const projectSecret = process.env.projectSecret;
 
 /*
 * @param network: the ethereum blockchain network
@@ -16,11 +18,11 @@ const { rankByFunctionSignature,
 * @returns an object containing transaction data about the user
 * */
 async function getUserInteractionsRanked(network, userAddress) {
-    provider = Ethers.providers.getDefaultProvider(network);
+    provider = Ethers.providers.getDefaultProvider(network, { infura: { projectId: projectId, projectSecret: projectSecret } });
     let results = {};
-    results.normalTransactionsRanked = await getNormalTransactionsRanked(userAddress);
-    results.internalTransactionsRanked = await getInternalTransactionsRanked(userAddress);
-    results.classifiedTransactions = await classifyTransactionsIntoCategories(results);
+    results.normalTransactions = await getNormalTransactions(userAddress);
+    results.internalTransactions = await getInternalTransactions(userAddress);
+    results.categories = await classifyTransactionsIntoCategories(results);
     return results;
 }
 
@@ -29,13 +31,14 @@ async function getUserInteractionsRanked(network, userAddress) {
 *  @returns classifiedTransactions an object
 *  */
 async function classifyTransactionsIntoCategories(resultsObj) {
-    let classifiedTransactions = {};
-    const txs = resultsObj.normalTransactionsRanked.concat(resultsObj.internalTransactionsRanked);
-    classifiedTransactions.mostEthTransfersTo = getMostEthTransfers(txs);
-    classifiedTransactions.mostUsedContract = await getMostUsedContracts(provider, txs);
-    classifiedTransactions.mostCalledFunctions = getMostCalledFunctions(txs);
-    classifiedTransactions.predictedTransactions = getPredictedTransactions(txs);
-    return classifiedTransactions;
+    let categories = {};
+    const txs = resultsObj.normalTransactions.concat(resultsObj.internalTransactions);
+    categories.mostEthTransfersTo = getMostEthTransfers(txs);
+    categories.mostUsedContracts = await getMostUsedContracts(provider, txs);
+    categories.contractsYouCreated = getContractsYouCreated(txs);
+    categories.mostCalledFunctions = await getMostCalledFunctions(txs);
+    // categories.predictedTransactions = getPredictedTransactions(txs);
+    return categories;
 }
 
 /*
@@ -43,7 +46,7 @@ async function classifyTransactionsIntoCategories(resultsObj) {
 * @param userAddress: the address of the user which will be checked up on
 * @returns object of transactions ranked by how often they are called
 *  */
-async function getNormalTransactionsRanked(userAddress) {
+async function getNormalTransactions(userAddress) {
     const query = getEtherscanNormalTransactionsQuery(parseInt(provider.chainId, 16), userAddress);
     try {
         const res = await request.get(query);
@@ -52,24 +55,14 @@ async function getNormalTransactionsRanked(userAddress) {
         for(let result of results) {
             let transactionDetails = result;
             transactionDetails.isEthTransfer = result.input === "0x";
-            let functionSignature = "";
             if(result.input === "0x") {
-                functionSignature = "transferEth";
+                transactionDetails.functionSignature = "transferEth";
             } else {
-                let bytesSignature = result.input.substr(2, 8);
-                try {
-                    let res = await request.get(`https://raw.githubusercontent.com/ethereum-lists/
-                    4bytes/master/signatures/${bytesSignature}`);
-                    functionSignature = res.body.result
-                    console.log(functionSignature)
-                } catch (e) {
-                    functionSignature = bytesSignature;
-                }
+                transactionDetails.functionSignature = result.input.substr(2, 8);
             }
-            transactionDetails.functionSignature = functionSignature; // 4bytes, eth transfer or function signature
             transactions.push(transactionDetails);
         }
-        return rankByFunctionSignature(transactions);
+        return transactions;
     } catch (e) {
         return e;
     }
@@ -80,7 +73,7 @@ async function getNormalTransactionsRanked(userAddress) {
 * @param userAddress: the address of the user which will be checked up on
 * @returns object of transactions ranked by how often they are called
 *  */
-async function getInternalTransactionsRanked(userAddress) {
+async function getInternalTransactions(userAddress) {
     const query = getEtherscanInternalTransactionsQuery(parseInt(provider.chainId, 16), userAddress);
     try {
         const res = await request.get(query);
@@ -89,17 +82,10 @@ async function getInternalTransactionsRanked(userAddress) {
         for(let result of results) {
             let transactionDetails = result;
             transactionDetails.isEthTransfer = false;
-            let bytesSignature = result.input.substr(0, 8);
-            try {
-                const functionSignatureQuery = `https://raw.githubusercontent.com/ethereum-lists/
-                4bytes/master/signatures/${bytesSignature}`;
-                transactionDetails.functionSignature = await request.get(functionSignatureQuery);
-            } catch (e) {
-                transactionDetails.functionSignature = bytesSignature;
-            }
+            transactionDetails.functionSignature = result.input.substr(0, 8);
             transactions.push(transactionDetails);
         }
-        return rankByFunctionSignature(transactions);
+        return transactions;
     } catch (e) {
         return e;
     }
