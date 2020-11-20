@@ -22,17 +22,15 @@ function getMostEthTransfers (txs) {
 
 //contract addresses of the top 5 contracts the user uses most
 async function getMostUsedContracts(ethersProvider, txs) {
-    const txRecipients = uniq(txs.map((tx) => {
-       return tx.to;
+    //TODO cheated by checking input as most transactions to EOA's have no input but this is not perfect
+    // I abandoned using ethersProvider.getCode(recipient) !== "0x" as it was too slow to check for each address
+    const txRecipientsContractsOnly = uniq(txs.map((tx) => {
+        if(tx.input !== "0x") {
+            return tx.to;
+        }
     })).filter((to) => {
         return to !== "";
     });
-    let txRecipientsContractsOnly = [];
-    for(let recipient of txRecipients) {
-        if(await ethersProvider.getCode(recipient) !== "0x") {
-            txRecipientsContractsOnly.push(recipient);
-        }
-    }
     return uniq(txRecipientsContractsOnly.sort((a,b) =>
         txRecipientsContractsOnly.filter(v => v===a).length
         - txRecipientsContractsOnly.filter(v => v===b).length
