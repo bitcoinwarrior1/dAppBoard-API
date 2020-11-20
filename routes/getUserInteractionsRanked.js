@@ -19,7 +19,7 @@ const projectSecret = process.env.projectSecret;
 * @returns an object containing transaction data about the user
 * */
 async function getUserInteractionsRanked(network, userAddress) {
-    provider = new Ethers.providers.InfuraProvider("homestead", {
+    provider = new Ethers.providers.InfuraProvider(network, {
         projectId: projectId,
         projectSecret: projectSecret
     });
@@ -51,7 +51,7 @@ async function classifyTransactionsIntoCategories(resultsObj) {
 * @returns object of transactions ranked by how often they are called
 *  */
 async function getNormalTransactions(userAddress) {
-    const query = getEtherscanNormalTransactionsQuery(parseInt(provider.chainId, 16), userAddress);
+    const query = getEtherscanNormalTransactionsQuery(provider._network.chainId, userAddress);
     try {
         const res = await request.get(query);
         const results = res.body.result;

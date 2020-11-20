@@ -1,4 +1,6 @@
+require('dotenv').config();
 const APIKeyString = process.env.apiKeyString;
+const request = require("superagent");
 
 function rankByFunctionSignature(arr) {
     return arr.sort((a,b) =>
@@ -54,9 +56,8 @@ async function getMostCalledFunctions (txs) {
     let top5Transactions = rankedTxs.slice(0, Math.min(nonEthTransferTxs.length - 5, 5));
     for(let index in top5Transactions) {
         try {
-            let res = await request.get(`https://raw.githubusercontent.com/ethereum-lists/
-        4bytes/master/signatures/${top5Transactions[index].functionSignature}`);
-            top5Transactions[index].functionSignature = res.body.result;
+            let res = await request.get(`https://raw.githubusercontent.com/ethereum-lists/4bytes/master/signatures/${top5Transactions[index].functionSignature}`);
+            top5Transactions[index].functionSignature = res.text;
         } catch (e) {
             // Not found -- Do nothing
         }
