@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start-watch": "nodemon -r dotenv/config app.js dotenv_config_path=.dev.env",
     "test": "mocha --exit --recursive --timeout 100000"
   },
   "repository": {
@@ -26,6 +27,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "dotenv": "^8.2.0",
-    "mocha": "^8.2.0"
+    "mocha": "^8.2.0",
+    "nodemon": "^2.0.6"
   }
 }

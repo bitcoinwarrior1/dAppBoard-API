@@ -1,4 +1,3 @@
-require('dotenv').config();
 const APIKeyString = process.env.apiKeyString;
 const request = require("superagent");
 
