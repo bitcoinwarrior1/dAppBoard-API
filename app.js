@@ -11,7 +11,7 @@ app.get("/ethereum-interactions/:network/:address", (req, res, next) => {
         res.send(result.categories);
     }).catch((err) => {
         res.send(err);
-    })
+    });
 });
 
 app.listen(port, () => console.log(`listening at ${port}`));

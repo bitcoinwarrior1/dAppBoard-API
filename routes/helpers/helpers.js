@@ -1,6 +1,5 @@
 const APIKeyString = process.env.apiKeyString;
 
-//TODO remove duplicates
 function rankByFunctionSignature(arr) {
     return arr.sort((a,b) =>
         arr.filter(v => v.functionSignature===a.functionSignature).length

@@ -9,6 +9,7 @@ const { getEtherscanNormalTransactionsQuery,
     getPredictedTransactions,
     getContractsYouCreated
 } = require("./helpers/helpers");
+require('dotenv').config();
 const projectId = process.env.projectId;
 const projectSecret = process.env.projectSecret;
 
