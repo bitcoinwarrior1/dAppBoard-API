@@ -1,23 +1,27 @@
 const APIKeyString = process.env.apiKeyString;
 const request = require("superagent");
 
-function rankByFunctionSignature(arr) {
-    return arr.sort((a,b) =>
-        arr.filter(v => v.functionSignature===a.functionSignature).length
-        - arr.filter(v => v.functionSignature===b.functionSignature).length
-    );
+function rankByFunctionCallFrequency(txs) {
+    //TODO clean up
+    const calls = txs.map((a) => {
+        return a.functionSignature + a.to + a.contractAddress;
+    });
+    return calls.byCount().map((call) => {
+        return {
+            functionSignature: call.substr(0, 8),
+            to: call.substr(8, 50),
+            contractAddress: call.substr(50) //for contract creations
+        }
+    });
 }
 
 // top 5 addresses this user sends ETH to
 function getMostEthTransfers (txs) {
     const ethTransferTxs = txs.filter((tx) => { return tx.isEthTransfer; });
-    const rankedTxs = ethTransferTxs.sort((a,b) =>
-        ethTransferTxs.filter(v => v.to===a.to).length
-        - ethTransferTxs.filter(v => v.to===b.to).length);
-    const recipients = rankedTxs.map((tx) => {
-        return tx.to;
+    const recipientsArray = ethTransferTxs.map((ethTransferTx) => {
+        return ethTransferTx.to;
     });
-    return uniq(recipients).slice(0, Math.min(recipients.length - 5, 5));
+    return recipientsArray.byCount().slice(0, Math.min(recipientsArray.length - 5, 5));
 }
 
 //contract addresses of the top 5 contracts the user uses most
@@ -31,10 +35,7 @@ async function getMostUsedContracts(ethersProvider, txs) {
     })).filter((to) => {
         return to !== "";
     });
-    return uniq(txRecipientsContractsOnly.sort((a,b) =>
-        txRecipientsContractsOnly.filter(v => v===a).length
-        - txRecipientsContractsOnly.filter(v => v===b).length
-    )).slice(0, Math.min(txRecipientsContractsOnly.length - 5, 5));
+    return txRecipientsContractsOnly.byCount().slice(0, Math.min(txRecipientsContractsOnly.length - 5, 5));
 }
 
 function getContractsYouCreated(txs) {
@@ -48,8 +49,8 @@ function getContractsYouCreated(txs) {
 
 // top 5 function signatures of the most popular function call on most used contracts
 async function getMostCalledFunctions (txs) {
-    const nonEthTransferTxs = txs.filter((tx) => { return !tx.isEthTransfer; });
-    const rankedTxs = rankByFunctionSignature(nonEthTransferTxs);
+    const nonEthTransferTxs = txs.filter((tx) => { return !tx.isEthTransfer && tx.input !== ""; });
+    const rankedTxs = rankByFunctionCallFrequency(nonEthTransferTxs);
     let top5Transactions = rankedTxs.slice(0, Math.min(nonEthTransferTxs.length - 5, 5));
     for(let index in top5Transactions) {
         try {
@@ -102,6 +103,20 @@ function getEtherscanInternalTransactionsQuery(chainId, userAddress) {
         default:
             return "https://api.etherscan.io/api?module=account&action=txlistinternal&address=" + userAddress + APIKeyString;
     }
+}
+
+Array.prototype.byCount= function(){
+    var itm, a= [], L= this.length, o= {};
+    for(var i= 0; i<L; i++){
+        itm= this[i];
+        if(!itm) continue;
+        if(o[itm]== undefined) o[itm]= 1;
+        else ++o[itm];
+    }
+    for(var p in o) a[a.length]= p;
+    return a.sort(function(a, b){
+        return o[b]-o[a];
+    });
 }
 
 module.exports = { getContractsYouCreated, getMostEthTransfers, getMostUsedContracts, getMostCalledFunctions, getPredictedTransactions, getEtherscanNormalTransactionsQuery, getEtherscanInternalTransactionsQuery };
